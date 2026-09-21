@@ -16,19 +16,20 @@ Um único bounded context, **Suporte**, com o agregado raiz `Ticket`.
 Aberto -> EmAtendimento -> AguardandoCliente -> EmAtendimento
                         -> Resolvido -> Fechado
 Resolvido -> Reaberto -> EmAtendimento
+Fechado   -> Reaberto  (reabertura formal, volta à fila sem responsável)
 ```
 
 As transições vivem dentro do agregado (`Assumir()`, `Resolver()`, `Reabrir()`), nunca em quem chama. Ninguém troca o campo `status` de fora.
 
 ### Decisões de modelagem
 
-| Decisão | Motivo |
-|---|---|
-| `Comentario` é **entidade filha** do `Ticket` | Tem autor, data e ordem; não é intercambiável como um Value Object |
+| Decisão                                              | Motivo                                                                    |
+| ---------------------------------------------------- | ------------------------------------------------------------------------- |
+| `Comentario` é **entidade filha** do `Ticket`        | Tem autor, data e ordem; não é intercambiável como um Value Object        |
 | SLA é uma **`PoliticaSla`** separada de `Prioridade` | Prioridade classifica; o prazo é regra e pode variar por cliente ou plano |
-| Tempo via **`System.TimeProvider`** | Permite testar SLA com `FakeTimeProvider`, sem depender do relógio real |
-| Solicitante e atendente entram só como **`Guid`** | Identidade é outro contexto; o domínio não navega para `User` |
-| **`TenantId`** no ticket desde o início | Adicionar multi-tenancy depois, com dados no banco, custa muito mais |
+| Tempo via **`System.TimeProvider`**                  | Permite testar SLA com `FakeTimeProvider`, sem depender do relógio real   |
+| Solicitante e atendente entram só como **`Guid`**    | Identidade é outro contexto; o domínio não navega para `User`             |
+| **`TenantId`** no ticket desde o início              | Adicionar multi-tenancy depois, com dados no banco, custa muito mais      |
 
 ## Arquitetura
 
@@ -61,7 +62,7 @@ Configurações sensíveis (connection strings, chaves) ficam em `appsettings.De
 ## Roadmap
 
 - [x] Estrutura da solution
-- [ ] Agregado `Ticket` com máquina de estados e testes
+- [x] Agregado `Ticket` com máquina de estados e testes
 - [ ] Cálculo de SLA com pausa (`AguardandoCliente`)
 - [ ] Persistência com EF Core
 - [ ] API com autenticação e policies por papel (cliente, atendente, supervisor)
