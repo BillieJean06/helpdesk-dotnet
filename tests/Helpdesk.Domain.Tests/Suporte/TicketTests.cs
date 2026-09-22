@@ -61,6 +61,29 @@ public class TicketTests
     }
 
     [Fact]
+    public void Abrir_rejeita_titulo_e_descricao_acima_do_limite()
+    {
+        Assert.Throws<DomainException>(() => Ticket.Abrir(
+            Tenant, Cliente, new string('a', Ticket.TituloMaxLength + 1), "d", Prioridade.Baixa, T0));
+        Assert.Throws<DomainException>(() => Ticket.Abrir(
+            Tenant, Cliente, "t", new string('a', Ticket.DescricaoMaxLength + 1), Prioridade.Baixa, T0));
+
+        var noLimite = Ticket.Abrir(
+            Tenant, Cliente, new string('a', Ticket.TituloMaxLength), "d", Prioridade.Baixa, T0);
+        Assert.Equal(Ticket.TituloMaxLength, noLimite.Titulo.Length);
+    }
+
+    [Fact]
+    public void Comentar_rejeita_texto_acima_do_limite()
+    {
+        var t = NovoTicket();
+
+        Assert.Throws<DomainException>(() =>
+            t.Comentar(Cliente, new string('a', Ticket.ComentarioMaxLength + 1), T0));
+        Assert.Empty(t.Comentarios);
+    }
+
+    [Fact]
     public void Abrir_rejeita_prioridade_invalida()
     {
         Assert.Throws<DomainException>(() =>

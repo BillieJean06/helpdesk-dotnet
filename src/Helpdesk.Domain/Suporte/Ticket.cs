@@ -6,6 +6,10 @@ namespace Helpdesk.Domain.Suporte;
 /// </summary>
 public sealed class Ticket
 {
+    public const int TituloMaxLength = 200;
+    public const int DescricaoMaxLength = 4000;
+    public const int ComentarioMaxLength = 4000;
+
     private readonly List<Comentario> _comentarios = [];
 
     public Guid Id { get; private set; }
@@ -44,6 +48,10 @@ public sealed class Ticket
         if (solicitanteId == Guid.Empty) throw new DomainException("Solicitante é obrigatório.");
         if (string.IsNullOrWhiteSpace(titulo)) throw new DomainException("Título é obrigatório.");
         if (string.IsNullOrWhiteSpace(descricao)) throw new DomainException("Descrição é obrigatória.");
+        if (titulo.Trim().Length > TituloMaxLength)
+            throw new DomainException($"Título deve ter no máximo {TituloMaxLength} caracteres.");
+        if (descricao.Trim().Length > DescricaoMaxLength)
+            throw new DomainException($"Descrição deve ter no máximo {DescricaoMaxLength} caracteres.");
         if (!Enum.IsDefined(prioridade)) throw new DomainException("Prioridade inválida.");
 
         var sla = (politica ?? PoliticaSla.Padrao).Para(prioridade);
@@ -141,6 +149,8 @@ public sealed class Ticket
     {
         if (autorId == Guid.Empty) throw new DomainException("Autor é obrigatório.");
         if (string.IsNullOrWhiteSpace(texto)) throw new DomainException("Comentário não pode ser vazio.");
+        if (texto.Trim().Length > ComentarioMaxLength)
+            throw new DomainException($"Comentário deve ter no máximo {ComentarioMaxLength} caracteres.");
         if (Status == StatusTicket.Fechado)
             throw new DomainException("Não é possível comentar em um ticket fechado.");
 

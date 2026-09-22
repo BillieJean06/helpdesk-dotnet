@@ -13,6 +13,20 @@ jobs:
   build-test:
     runs-on: ubuntu-latest
 
+    # Postgres descartável para os testes de integração (existe só durante o job).
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,3 +44,6 @@ jobs:
 
       - name: Test
         run: dotnet test --no-build --configuration Release --verbosity normal
+        env:
+          # Credencial descartável do container acima; não é um segredo real.
+          HELPDESK_TEST_CONNECTION: Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=postgres

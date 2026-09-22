@@ -52,6 +52,11 @@ Regras:
 | Domínio recebe **`agora`** por parâmetro             | O `TimeProvider` fica na Application; nos testes, `FakeTimeProvider` controla o relógio |
 | Solicitante e atendente entram só como **`Guid`**    | Identidade é outro contexto; o domínio não navega para `User`             |
 | **`TenantId`** no ticket desde o início              | Adicionar multi-tenancy depois, com dados no banco, custa muito mais      |
+| **Filtro global por tenant** no EF + checagem no `Adicionar` | Leituras nunca cruzam empresas; gravações de outro tenant são recusadas |
+| **`ITicketRepository` no Domain**, EF na Infrastructure | O domínio declara o que precisa; quem persiste é detalhe de infraestrutura |
+| **Concorrência otimista** (`xmin` do Postgres)       | Dois atendentes não assumem o mesmo ticket: o segundo recebe conflito     |
+| **Enums gravados como texto**                        | Legível no banco e imune a reordenação do enum                            |
+| **Limites de tamanho no domínio**                    | Estourar o limite vira `DomainException`, não erro de banco               |
 
 ## Arquitetura
 
@@ -64,29 +69,54 @@ src/
   Helpdesk.Infrastructure  EF Core, repositórios
   Helpdesk.Api             ASP.NET Core, autenticação, policies
 tests/
-  Helpdesk.Domain.Tests    testes unitários puros, sem banco
+  Helpdesk.Domain.Tests           testes unitários puros, sem banco
+  Helpdesk.Infrastructure.Tests   integração com PostgreSQL real (migrations incluídas)
 ```
 
 Regra de dependência: `Api -> Infrastructure -> Application -> Domain`. O `Domain` não referencia ninguém.
 
 ## Como rodar
 
-Requisitos: [.NET SDK 8](https://dotnet.microsoft.com/download).
+Requisitos: [.NET SDK 8](https://dotnet.microsoft.com/download) e um PostgreSQL 14+ acessível (local ou em container).
+
+**1. Banco de desenvolvimento** (exemplo; troque a senha):
 
 ```bash
-dotnet build
-dotnet test
+psql -d postgres -c "CREATE ROLE helpdesk LOGIN CREATEDB PASSWORD '<senha>'"
+psql -d postgres -c "CREATE DATABASE helpdesk_dev OWNER helpdesk"
+```
+
+**2. Connection string via user-secrets** (fica fora do repositório):
+
+```bash
+dotnet user-secrets set "ConnectionStrings:Helpdesk" "Host=localhost;Database=helpdesk_dev;Username=helpdesk;Password=<senha>" --project src/Helpdesk.Api
+```
+
+**3. Migrations e execução:**
+
+```bash
+dotnet tool restore
+HELPDESK_DEV_CONNECTION="Host=localhost;Database=helpdesk_dev;Username=helpdesk;Password=<senha>" \
+  dotnet ef database update -p src/Helpdesk.Infrastructure
 dotnet run --project src/Helpdesk.Api
 ```
 
-Configurações sensíveis (connection strings, chaves) ficam em `appsettings.Development.json` ou user-secrets, ambos fora do versionamento.
+**Testes:**
+
+```bash
+dotnet test   # unitários; os de integração são ignorados se HELPDESK_TEST_CONNECTION não estiver definida
+```
+
+Para rodar os de integração, aponte `HELPDESK_TEST_CONNECTION` para um servidor onde o usuário possa criar bancos (ex.: `Host=localhost;Database=postgres;Username=helpdesk;Password=<senha>`). Cada execução cria um banco descartável, aplica as migrations e o remove no final. No CI isso roda contra um container Postgres.
+
+Segredos (connection strings, chaves) nunca entram no repositório: use user-secrets ou variáveis de ambiente.
 
 ## Roadmap
 
 - [x] Estrutura da solution
 - [x] Agregado `Ticket` com máquina de estados e testes
 - [x] Cálculo de SLA (primeira resposta e resolução) com pausa em `AguardandoCliente`
-- [ ] Persistência com EF Core
+- [x] Persistência com EF Core (PostgreSQL, migrations, testes de integração)
 - [ ] API com autenticação e policies por papel (cliente, atendente, supervisor)
 - [ ] Front-end React + TypeScript (Vite, TanStack Query)
 - [ ] Domain Events (`TicketResolvido`, `TicketReaberto`)

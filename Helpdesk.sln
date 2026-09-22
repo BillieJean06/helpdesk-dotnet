@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D4FBB196
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helpdesk.Domain.Tests", "tests\Helpdesk.Domain.Tests\Helpdesk.Domain.Tests.csproj", "{1704BDB3-928F-4BA7-80BB-57C111781266}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helpdesk.Infrastructure.Tests", "tests\Helpdesk.Infrastructure.Tests\Helpdesk.Infrastructure.Tests.csproj", "{A8023371-984A-4DCC-A347-EE8A20FADFB3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +48,10 @@ Global
 		{1704BDB3-928F-4BA7-80BB-57C111781266}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1704BDB3-928F-4BA7-80BB-57C111781266}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1704BDB3-928F-4BA7-80BB-57C111781266}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8023371-984A-4DCC-A347-EE8A20FADFB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8023371-984A-4DCC-A347-EE8A20FADFB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8023371-984A-4DCC-A347-EE8A20FADFB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8023371-984A-4DCC-A347-EE8A20FADFB3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D79F2AB4-ED2E-4B4A-B482-8AA30B2A28F8} = {58E3278C-E6DF-455E-8E64-14E578110EE2}
@@ -53,5 +59,6 @@ Global
 		{FD58F0C4-EFB4-4677-8521-5D920E5705C8} = {58E3278C-E6DF-455E-8E64-14E578110EE2}
 		{C509BB20-7975-4CBC-8FAA-F4B1271C6709} = {58E3278C-E6DF-455E-8E64-14E578110EE2}
 		{1704BDB3-928F-4BA7-80BB-57C111781266} = {D4FBB196-1BB8-4238-8F71-2BB03BF24763}
+		{A8023371-984A-4DCC-A347-EE8A20FADFB3} = {D4FBB196-1BB8-4238-8F71-2BB03BF24763}
 	EndGlobalSection
 EndGlobal
