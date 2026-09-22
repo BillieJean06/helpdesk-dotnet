@@ -1,0 +1,16 @@
+# Postgres local para desenvolvimento. Credenciais fixas e sem valor real:
+# servem só para este container efêmero, nunca aponte isto para produção.
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: helpdesk
+      POSTGRES_PASSWORD: helpdesk
+      POSTGRES_DB: helpdesk_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - helpdesk-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  helpdesk-postgres-data:

@@ -28,11 +28,11 @@ As transições vivem dentro do agregado (`Assumir()`, `Resolver()`, `Reabrir()`
 Cada ticket tem dois prazos, definidos pela prioridade na abertura (valores genéricos, inventados para o estudo):
 
 | Prioridade | Primeira resposta | Resolução |
-|---|---|---|
-| Crítica | 15 min | 4 h |
-| Alta | 1 h | 8 h |
-| Média | 4 h | 24 h |
-| Baixa | 8 h | 72 h |
+| ---------- | ----------------- | --------- |
+| Crítica    | 15 min            | 4 h       |
+| Alta       | 1 h               | 8 h       |
+| Média      | 4 h               | 24 h      |
+| Baixa      | 8 h               | 72 h      |
 
 Regras:
 
@@ -45,18 +45,18 @@ Regras:
 
 ### Decisões de modelagem
 
-| Decisão                                              | Motivo                                                                    |
-| ---------------------------------------------------- | ------------------------------------------------------------------------- |
-| `Comentario` é **entidade filha** do `Ticket`        | Tem autor, data e ordem; não é intercambiável como um Value Object        |
-| SLA é uma **`PoliticaSla`** separada de `Prioridade` | Prioridade classifica; o prazo é regra e pode variar por cliente ou plano |
-| Domínio recebe **`agora`** por parâmetro             | O `TimeProvider` fica na Application; nos testes, `FakeTimeProvider` controla o relógio |
-| Solicitante e atendente entram só como **`Guid`**    | Identidade é outro contexto; o domínio não navega para `User`             |
-| **`TenantId`** no ticket desde o início              | Adicionar multi-tenancy depois, com dados no banco, custa muito mais      |
-| **Filtro global por tenant** no EF + checagem no `Adicionar` | Leituras nunca cruzam empresas; gravações de outro tenant são recusadas |
-| **`ITicketRepository` no Domain**, EF na Infrastructure | O domínio declara o que precisa; quem persiste é detalhe de infraestrutura |
-| **Concorrência otimista** (`xmin` do Postgres)       | Dois atendentes não assumem o mesmo ticket: o segundo recebe conflito     |
-| **Enums gravados como texto**                        | Legível no banco e imune a reordenação do enum                            |
-| **Limites de tamanho no domínio**                    | Estourar o limite vira `DomainException`, não erro de banco               |
+| Decisão                                                      | Motivo                                                                                  |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `Comentario` é **entidade filha** do `Ticket`                | Tem autor, data e ordem; não é intercambiável como um Value Object                      |
+| SLA é uma **`PoliticaSla`** separada de `Prioridade`         | Prioridade classifica; o prazo é regra e pode variar por cliente ou plano               |
+| Domínio recebe **`agora`** por parâmetro                     | O `TimeProvider` fica na Application; nos testes, `FakeTimeProvider` controla o relógio |
+| Solicitante e atendente entram só como **`Guid`**            | Identidade é outro contexto; o domínio não navega para `User`                           |
+| **`TenantId`** no ticket desde o início                      | Adicionar multi-tenancy depois, com dados no banco, custa muito mais                    |
+| **Filtro global por tenant** no EF + checagem no `Adicionar` | Leituras nunca cruzam empresas; gravações de outro tenant são recusadas                 |
+| **`ITicketRepository` no Domain**, EF na Infrastructure      | O domínio declara o que precisa; quem persiste é detalhe de infraestrutura              |
+| **Concorrência otimista** (`xmin` do Postgres)               | Dois atendentes não assumem o mesmo ticket: o segundo recebe conflito                   |
+| **Enums gravados como texto**                                | Legível no banco e imune a reordenação do enum                                          |
+| **Limites de tamanho no domínio**                            | Estourar o limite vira `DomainException`, não erro de banco                             |
 
 ## Arquitetura
 
@@ -77,27 +77,26 @@ Regra de dependência: `Api -> Infrastructure -> Application -> Domain`. O `Doma
 
 ## Como rodar
 
-Requisitos: [.NET SDK 8](https://dotnet.microsoft.com/download) e um PostgreSQL 14+ acessível (local ou em container).
+Requisitos: [.NET SDK 8](https://dotnet.microsoft.com/download) e Docker.
 
-**1. Banco de desenvolvimento** (exemplo; troque a senha):
+**1. Banco de desenvolvimento** (credenciais fixas do `docker-compose.yml`, sem valor fora do seu ambiente local):
 
 ```bash
-psql -d postgres -c "CREATE ROLE helpdesk LOGIN CREATEDB PASSWORD '<senha>'"
-psql -d postgres -c "CREATE DATABASE helpdesk_dev OWNER helpdesk"
+docker compose up -d
+cp .env.example .env
 ```
 
-**2. Connection string via user-secrets** (fica fora do repositório):
+**2. Connection string via user-secrets** (fica fora do repositório; a API lê daqui, não do `.env`):
 
 ```bash
-dotnet user-secrets set "ConnectionStrings:Helpdesk" "Host=localhost;Database=helpdesk_dev;Username=helpdesk;Password=<senha>" --project src/Helpdesk.Api
+dotnet user-secrets set "ConnectionStrings:Helpdesk" "Host=localhost;Database=helpdesk_dev;Username=helpdesk;Password=helpdesk" --project src/Helpdesk.Api
 ```
 
 **3. Migrations e execução:**
 
 ```bash
 dotnet tool restore
-HELPDESK_DEV_CONNECTION="Host=localhost;Database=helpdesk_dev;Username=helpdesk;Password=<senha>" \
-  dotnet ef database update -p src/Helpdesk.Infrastructure
+source .env && dotnet ef database update -p src/Helpdesk.Infrastructure
 dotnet run --project src/Helpdesk.Api
 ```
 
@@ -105,11 +104,12 @@ dotnet run --project src/Helpdesk.Api
 
 ```bash
 dotnet test   # unitários; os de integração são ignorados se HELPDESK_TEST_CONNECTION não estiver definida
+source .env && dotnet test   # inclui os de integração, contra o Postgres do docker-compose
 ```
 
-Para rodar os de integração, aponte `HELPDESK_TEST_CONNECTION` para um servidor onde o usuário possa criar bancos (ex.: `Host=localhost;Database=postgres;Username=helpdesk;Password=<senha>`). Cada execução cria um banco descartável, aplica as migrations e o remove no final. No CI isso roda contra um container Postgres.
+Os testes de integração criam um banco descartável por execução e o removem no final. No CI, rodam contra um serviço Postgres efêmero do próprio workflow.
 
-Segredos (connection strings, chaves) nunca entram no repositório: use user-secrets ou variáveis de ambiente.
+**Segredos nunca entram no repositório.** As credenciais em `docker-compose.yml` e `.env.example` são fixas de propósito, só valem para o container local e não protegem nada sensível; em qualquer ambiente real (staging, produção), a connection string vem de user-secrets, variável de ambiente ou de um cofre de segredos, nunca de um arquivo versionado.
 
 ## Roadmap
 
