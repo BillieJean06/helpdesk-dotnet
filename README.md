@@ -43,6 +43,23 @@ Regras:
 - Os prazos ficam **gravados no ticket** (`PrazosSla`); mudar a `PoliticaSla` depois não altera tickets já abertos.
 - Tempo corrido, sem horário comercial (possível evolução).
 
+### Autenticação e papéis
+
+Três papéis, com JWT emitido pela própria API (ASP.NET Identity para usuários/senhas, sem cookies nem tela de cadastro):
+
+- **Cliente:** abre tickets e só vê os próprios.
+- **Atendente:** assume tickets e vê qualquer um do seu tenant.
+- **Supervisor:** mesma visão do atendente (reatribuição e métricas ficam para depois).
+
+```
+POST /api/auth/login          { "email": "...", "senha": "..." }  -> { "token": "...", "expiraEm": "..." }
+POST /api/tickets              [Cliente]     abre um ticket
+POST /api/tickets/{id}/assumir [Atendente]   assume da fila
+GET  /api/tickets/{id}         [autenticado] cliente só vê o próprio; atendente/supervisor veem qualquer um do tenant
+```
+
+O `tenant_id` e o papel vêm como claims no próprio JWT; o filtro global do EF cuida do isolamento entre empresas a partir daí.
+
 ### Decisões de modelagem
 
 | Decisão                                                      | Motivo                                                                                  |
@@ -57,6 +74,8 @@ Regras:
 | **Concorrência otimista** (`xmin` do Postgres)               | Dois atendentes não assumem o mesmo ticket: o segundo recebe conflito                   |
 | **Enums gravados como texto**                                | Legível no banco e imune a reordenação do enum                                          |
 | **Limites de tamanho no domínio**                            | Estourar o limite vira `DomainException`, não erro de banco                             |
+| **ASP.NET Identity só com `AddIdentityCore`**, sem cookies    | A Api emite JWT; não precisa do esquema de sign-in completo do `AddIdentity`             |
+| **Papel (role) é conceito da Application/Api**, não do Domain | O agregado protege consistência (“só o responsável resolve”); quem pode fazer o quê é autorização |
 
 ## Arquitetura
 
@@ -70,7 +89,9 @@ src/
   Helpdesk.Api             ASP.NET Core, autenticação, policies
 tests/
   Helpdesk.Domain.Tests           testes unitários puros, sem banco
+  Helpdesk.Application.Tests      casos de uso com repositório em memória (fakes)
   Helpdesk.Infrastructure.Tests   integração com PostgreSQL real (migrations incluídas)
+  Helpdesk.Api.Tests              emissão/validação de JWT
 ```
 
 Regra de dependência: `Api -> Infrastructure -> Application -> Domain`. O `Domain` não referencia ninguém.
@@ -86,10 +107,11 @@ docker compose up -d
 cp .env.example .env
 ```
 
-**2. Connection string via user-secrets** (fica fora do repositório; a API lê daqui, não do `.env`):
+**2. Connection string e chave do JWT via user-secrets** (fica fora do repositório; a API lê daqui, não do `.env`):
 
 ```bash
 dotnet user-secrets set "ConnectionStrings:Helpdesk" "Host=localhost;Database=helpdesk_dev;Username=helpdesk;Password=helpdesk" --project src/Helpdesk.Api
+dotnet user-secrets set "Jwt:Key" "<qualquer string com pelo menos 32 caracteres>" --project src/Helpdesk.Api
 ```
 
 **3. Migrations e execução:**
@@ -99,6 +121,14 @@ dotnet tool restore
 source .env && dotnet ef database update -p src/Helpdesk.Infrastructure
 dotnet run --project src/Helpdesk.Api
 ```
+
+Em ambiente de Development, a API cria sozinha os três papéis e um usuário de exemplo por papel (login abaixo), se ainda não existirem. Credenciais públicas de propósito, só para rodar o projeto localmente — nunca use esse padrão em produção:
+
+| Papel | E-mail | Senha |
+| --- | --- | --- |
+| Cliente | `cliente@helpdesk.local` | `Demo123$` |
+| Atendente | `atendente@helpdesk.local` | `Demo123$` |
+| Supervisor | `supervisor@helpdesk.local` | `Demo123$` |
 
 **Testes:**
 
@@ -117,7 +147,7 @@ Os testes de integração criam um banco descartável por execução e o removem
 - [x] Agregado `Ticket` com máquina de estados e testes
 - [x] Cálculo de SLA (primeira resposta e resolução) com pausa em `AguardandoCliente`
 - [x] Persistência com EF Core (PostgreSQL, migrations, testes de integração)
-- [ ] API com autenticação e policies por papel (cliente, atendente, supervisor)
+- [x] API com autenticação (ASP.NET Identity + JWT) e policies por papel (cliente, atendente, supervisor)
 - [ ] Front-end React + TypeScript (Vite, TanStack Query)
 - [ ] Domain Events (`TicketResolvido`, `TicketReaberto`)
 - [ ] Outbox Pattern

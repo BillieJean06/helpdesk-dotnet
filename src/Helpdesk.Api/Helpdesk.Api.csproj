@@ -8,12 +8,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Helpdesk.Application\Helpdesk.Application.csproj" />
     <ProjectReference Include="..\Helpdesk.Infrastructure\Helpdesk.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <!-- Permite que os testes exercitem JwtTokenService, HttpTenantContext etc. sem torná-los public. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Helpdesk.Api.Tests" />
   </ItemGroup>
 
 </Project>

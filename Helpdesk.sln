@@ -19,6 +19,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helpdesk.Domain.Tests", "te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helpdesk.Infrastructure.Tests", "tests\Helpdesk.Infrastructure.Tests\Helpdesk.Infrastructure.Tests.csproj", "{A8023371-984A-4DCC-A347-EE8A20FADFB3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helpdesk.Application.Tests", "tests\Helpdesk.Application.Tests\Helpdesk.Application.Tests.csproj", "{1734E1B4-3591-4CD2-A8CC-4366B82F58FA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helpdesk.Api.Tests", "tests\Helpdesk.Api.Tests\Helpdesk.Api.Tests.csproj", "{E899CA7D-4EAD-4941-857C-4252D5EA05F0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -52,6 +56,14 @@ Global
 		{A8023371-984A-4DCC-A347-EE8A20FADFB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A8023371-984A-4DCC-A347-EE8A20FADFB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A8023371-984A-4DCC-A347-EE8A20FADFB3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1734E1B4-3591-4CD2-A8CC-4366B82F58FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1734E1B4-3591-4CD2-A8CC-4366B82F58FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1734E1B4-3591-4CD2-A8CC-4366B82F58FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1734E1B4-3591-4CD2-A8CC-4366B82F58FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E899CA7D-4EAD-4941-857C-4252D5EA05F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E899CA7D-4EAD-4941-857C-4252D5EA05F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E899CA7D-4EAD-4941-857C-4252D5EA05F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E899CA7D-4EAD-4941-857C-4252D5EA05F0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D79F2AB4-ED2E-4B4A-B482-8AA30B2A28F8} = {58E3278C-E6DF-455E-8E64-14E578110EE2}
@@ -60,5 +72,7 @@ Global
 		{C509BB20-7975-4CBC-8FAA-F4B1271C6709} = {58E3278C-E6DF-455E-8E64-14E578110EE2}
 		{1704BDB3-928F-4BA7-80BB-57C111781266} = {D4FBB196-1BB8-4238-8F71-2BB03BF24763}
 		{A8023371-984A-4DCC-A347-EE8A20FADFB3} = {D4FBB196-1BB8-4238-8F71-2BB03BF24763}
+		{1734E1B4-3591-4CD2-A8CC-4366B82F58FA} = {D4FBB196-1BB8-4238-8F71-2BB03BF24763}
+		{E899CA7D-4EAD-4941-857C-4252D5EA05F0} = {D4FBB196-1BB8-4238-8F71-2BB03BF24763}
 	EndGlobalSection
 EndGlobal

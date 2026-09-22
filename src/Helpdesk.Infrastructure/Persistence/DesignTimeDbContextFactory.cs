@@ -23,6 +23,8 @@ internal sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<H
 
     private sealed class TenantDeDesignTime : ITenantContext
     {
+        // `dotnet ef` só precisa montar o modelo (para gerar/aplicar migrations);
+        // o filtro global nunca é avaliado nesse fluxo.
         public Guid TenantId => Guid.Empty;
     }
 }
