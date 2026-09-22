@@ -1,5 +1,6 @@
 using Helpdesk.Application.Abstractions;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Helpdesk.Infrastructure.Identity;
@@ -32,7 +33,10 @@ public static class IdentitySeeder
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         foreach (var (email, nome, papel) in Usuarios)
         {
-            if (await userManager.FindByEmailAsync(email) is not null) continue;
+            var normalizedEmail = userManager.NormalizeEmail(email);
+            var jaExiste = await userManager.Users.AnyAsync(
+                u => u.TenantId == TenantsDemo.Empresa && u.NormalizedEmail == normalizedEmail, ct);
+            if (jaExiste) continue;
 
             var usuario = new ApplicationUser
             {

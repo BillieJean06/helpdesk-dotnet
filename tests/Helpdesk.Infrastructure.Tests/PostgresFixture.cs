@@ -1,7 +1,9 @@
 using Helpdesk.Application.Abstractions;
 using Helpdesk.Domain.Suporte;
 using Helpdesk.Infrastructure;
+using Helpdesk.Infrastructure.Identity;
 using Helpdesk.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -73,6 +75,8 @@ public sealed class Sessao : IDisposable
     public ITicketRepository Repo => _scope.ServiceProvider.GetRequiredService<ITicketRepository>();
 
     public HelpdeskDbContext Db => _scope.ServiceProvider.GetRequiredService<HelpdeskDbContext>();
+
+    public UserManager<ApplicationUser> Usuarios => _scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
     public void Dispose()
     {

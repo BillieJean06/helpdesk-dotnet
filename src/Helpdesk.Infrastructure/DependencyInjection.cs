@@ -4,6 +4,7 @@ using Helpdesk.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Helpdesk.Infrastructure;
 
@@ -35,6 +36,12 @@ public static class DependencyInjection
             })
             .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<HelpdeskDbContext>();
+
+        // O validador padrão do Identity checa unicidade de username/e-mail na tabela inteira.
+        // Substituímos pelo tenant-aware: duas empresas podem ter cada uma um usuário com o
+        // mesmo e-mail, sem colidir.
+        services.RemoveAll<IUserValidator<ApplicationUser>>();
+        services.AddScoped<IUserValidator<ApplicationUser>, TenantAwareUserValidator>();
 
         return services;
     }

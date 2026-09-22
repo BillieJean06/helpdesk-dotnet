@@ -26,7 +26,18 @@ public sealed class HelpdeskDbContext(DbContextOptions<HelpdeskDbContext> option
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(HelpdeskDbContext).Assembly);
 
+        // O Identity cria, por padrão, um índice único global em NormalizedUserName. Aqui a
+        // unicidade é por tenant (duas empresas podem ter cada uma um usuário com o mesmo
+        // e-mail/username), então trocamos pelo índice composto — em conjunto com o
+        // TenantAwareUserValidator, que faz a mesma checagem na camada de aplicação.
+        modelBuilder.Entity<ApplicationUser>(b =>
+        {
+            b.HasIndex(u => u.NormalizedUserName).IsUnique(false);
+            b.HasIndex(u => new { u.TenantId, u.NormalizedEmail }).IsUnique();
+        });
+
         // Isolamento multi-tenant: nenhuma consulta enxerga tickets de outro tenant.
+        // ApplicationUser não tem esse filtro: login acontece antes de o tenant ser conhecido.
         modelBuilder.Entity<Ticket>().HasQueryFilter(t => t.TenantId == TenantAtual);
     }
 }

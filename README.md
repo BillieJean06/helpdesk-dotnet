@@ -52,13 +52,15 @@ Três papéis, com JWT emitido pela própria API (ASP.NET Identity para usuário
 - **Supervisor:** mesma visão do atendente (reatribuição e métricas ficam para depois).
 
 ```
-POST /api/auth/login          { "email": "...", "senha": "..." }  -> { "token": "...", "expiraEm": "..." }
+POST /api/auth/login          { "tenantId": "...", "email": "...", "senha": "..." }  -> { "token": "...", "expiraEm": "..." }
 POST /api/tickets              [Cliente]     abre um ticket
 POST /api/tickets/{id}/assumir [Atendente]   assume da fila
 GET  /api/tickets/{id}         [autenticado] cliente só vê o próprio; atendente/supervisor veem qualquer um do tenant
 ```
 
 O `tenant_id` e o papel vêm como claims no próprio JWT; o filtro global do EF cuida do isolamento entre empresas a partir daí.
+
+**E-mail é único por empresa, não globalmente:** duas empresas podem ter, cada uma, um usuário com o mesmo e-mail (`TenantAwareUserValidator`, substituindo o validador padrão do Identity). Por isso o login pede o `tenantId` explicitamente — hoje um placeholder honesto, já que ainda não existe um fluxo de escolha de empresa (subdomínio, convite, código); ver "Multi-tenancy" no roadmap.
 
 ### Decisões de modelagem
 
@@ -73,6 +75,7 @@ O `tenant_id` e o papel vêm como claims no próprio JWT; o filtro global do EF 
 | **`ITicketRepository` no Domain**, EF na Infrastructure      | O domínio declara o que precisa; quem persiste é detalhe de infraestrutura              |
 | **Concorrência otimista** (`xmin` do Postgres)               | Dois atendentes não assumem o mesmo ticket: o segundo recebe conflito                   |
 | **Enums gravados como texto**                                | Legível no banco e imune a reordenação do enum                                          |
+| **`UserValidator` do Identity trocado** por um tenant-aware   | O padrão checa unicidade de e-mail/username na tabela inteira; aqui é por tenant          |
 | **Limites de tamanho no domínio**                            | Estourar o limite vira `DomainException`, não erro de banco                             |
 | **ASP.NET Identity só com `AddIdentityCore`**, sem cookies    | A Api emite JWT; não precisa do esquema de sign-in completo do `AddIdentity`             |
 | **Papel (role) é conceito da Application/Api**, não do Domain | O agregado protege consistência (“só o responsável resolve”); quem pode fazer o quê é autorização |
@@ -122,7 +125,7 @@ source .env && dotnet ef database update -p src/Helpdesk.Infrastructure
 dotnet run --project src/Helpdesk.Api
 ```
 
-Em ambiente de Development, a API cria sozinha os três papéis e um usuário de exemplo por papel (login abaixo), se ainda não existirem. Credenciais públicas de propósito, só para rodar o projeto localmente — nunca use esse padrão em produção:
+Em ambiente de Development, a API cria sozinha os três papéis e um usuário de exemplo por papel (login abaixo), se ainda não existirem. Credenciais públicas de propósito, só para rodar o projeto localmente — nunca use esse padrão em produção. `tenantId`: `11111111-1111-1111-1111-111111111111`.
 
 | Papel | E-mail | Senha |
 | --- | --- | --- |
