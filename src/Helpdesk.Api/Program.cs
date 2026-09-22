@@ -57,7 +57,11 @@ builder.Services
             ValidIssuer = jwtSection["Issuer"],
             ValidAudience = jwtSection["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            ClockSkew = TimeSpan.FromSeconds(30)
+            ClockSkew = TimeSpan.FromSeconds(30),
+            // Sem isso, [Authorize(Roles=...)] e User.IsInRole procurariam a claim de papel
+            // pela URI longa padrão do .NET (ClaimTypes.Role), não pela claim curta "role"
+            // que o JwtTokenService realmente emite.
+            RoleClaimType = JwtTokenService.RoleClaimType
         };
     });
 builder.Services.AddAuthorization();
@@ -80,7 +84,11 @@ builder.Services.AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SupportNonNullableReferenceTypes();
+    options.SchemaFilter<RequiredPropertiesSchemaFilter>();
+});
 
 var app = builder.Build();
 

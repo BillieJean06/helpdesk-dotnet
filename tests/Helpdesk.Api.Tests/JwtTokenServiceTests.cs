@@ -49,6 +49,7 @@ public class JwtTokenServiceTests
             ValidAudience = Options.Audience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Options.Key)),
             ClockSkew = TimeSpan.Zero,
+            RoleClaimType = JwtTokenService.RoleClaimType,
             ValidateLifetime = checarExpiracaoPeloRelogioFake,
             LifetimeValidator = checarExpiracaoPeloRelogioFake
                 ? (notBefore, expires, _, _) =>
@@ -79,8 +80,13 @@ public class JwtTokenServiceTests
 
         Assert.Equal(usuario.TenantId.ToString(), principal.FindFirstValue(HttpTenantContext.ClaimType));
         Assert.Equal(usuario.Email, principal.FindFirstValue(JwtRegisteredClaimNames.Email));
+        // Claim curta "role" no token (não ClaimTypes.Role, a URI longa do .NET): é o que o
+        // front-end (fora do mundo .NET) precisa conseguir ler sem conhecer convenções do .NET.
         Assert.Equal([Papeis.Atendente, Papeis.Supervisor],
-            principal.FindAll(ClaimTypes.Role).Select(c => c.Value));
+            principal.FindAll(JwtTokenService.RoleClaimType).Select(c => c.Value));
+        Assert.True(principal.IsInRole(Papeis.Atendente));
+        Assert.True(principal.IsInRole(Papeis.Supervisor));
+        Assert.False(principal.IsInRole(Papeis.Cliente));
     }
 
     [Fact]

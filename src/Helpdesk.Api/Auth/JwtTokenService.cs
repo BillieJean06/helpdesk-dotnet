@@ -11,6 +11,14 @@ namespace Helpdesk.Api.Auth;
 /// <see cref="HttpTenantContext"/>, <see cref="HttpUsuarioAtual"/> e [Authorize(Roles=...)] leem depois.</summary>
 public sealed class JwtTokenService(JwtOptions _options, TimeProvider relogio)
 {
+    /// <summary>
+    /// Claim curta "role", não <see cref="ClaimTypes.Role"/> (que serializa como a URI longa
+    /// do .NET, ilegível e desnecessária num JWT). O servidor sabe ler essa claim curta como
+    /// papel porque <c>TokenValidationParameters.RoleClaimType</c> é configurado para "role"
+    /// em Program.cs; sem isso, <c>[Authorize(Roles=...)]</c> não a reconheceria.
+    /// </summary>
+    public const string RoleClaimType = "role";
+
     public (string Token, DateTimeOffset ExpiraEm) Gerar(ApplicationUser usuario, IEnumerable<string> papeis)
     {
         var agora = relogio.GetUtcNow();
@@ -21,7 +29,7 @@ public sealed class JwtTokenService(JwtOptions _options, TimeProvider relogio)
             new(JwtRegisteredClaimNames.Sub, usuario.Id.ToString()),
             new(JwtRegisteredClaimNames.Email, usuario.Email!),
             new(HttpTenantContext.ClaimType, usuario.TenantId.ToString()),
-            .. papeis.Select(p => new Claim(ClaimTypes.Role, p))
+            .. papeis.Select(p => new Claim(RoleClaimType, p))
         ];
 
         var credenciais = new SigningCredentials(

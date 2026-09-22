@@ -1,0 +1,187 @@
+:root {
+  color-scheme: light dark;
+  --cor-fundo: #f7f7f8;
+  --cor-superficie: #ffffff;
+  --cor-borda: #e2e2e6;
+  --cor-texto: #1c1c1f;
+  --cor-texto-fraco: #6b6b73;
+  --cor-primaria: #2f5fd6;
+  --cor-primaria-texto: #ffffff;
+  --cor-perigo: #c02626;
+
+  --raio: 8px;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --cor-fundo: #16161a;
+    --cor-superficie: #1f1f24;
+    --cor-borda: #2e2e34;
+    --cor-texto: #f0f0f2;
+    --cor-texto-fraco: #9a9aa2;
+    --cor-primaria: #6f92e8;
+    --cor-primaria-texto: #101010;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+}
+
+#root {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+}
+
+a {
+  color: var(--cor-primaria);
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.topbar h1 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.usuario {
+  font-size: 0.85rem;
+  color: var(--cor-texto-fraco);
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.card {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  padding: 1rem 1.25rem;
+}
+
+.botao {
+  border: 1px solid var(--cor-primaria);
+  background: var(--cor-primaria);
+  color: var(--cor-primaria-texto);
+  border-radius: var(--raio);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.botao:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.botao-secundario {
+  border: 1px solid var(--cor-borda);
+  background: transparent;
+  color: var(--cor-texto);
+  border-radius: var(--raio);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.9rem;
+}
+
+.campo label {
+  font-size: 0.85rem;
+  color: var(--cor-texto-fraco);
+}
+
+.campo input, .campo select, .campo textarea {
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  padding: 0.55rem 0.7rem;
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+}
+
+.erro {
+  color: var(--cor-perigo);
+  font-size: 0.85rem;
+}
+
+.lista-tickets {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.ticket-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.ticket-item .titulo {
+  font-weight: 600;
+}
+
+.ticket-item .meta {
+  font-size: 0.8rem;
+  color: var(--cor-texto-fraco);
+}
+
+.badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.comentario {
+  border-top: 1px solid var(--cor-borda);
+  padding: 0.6rem 0;
+}
+
+.comentario:first-child {
+  border-top: none;
+}
+
+.comentario .meta {
+  font-size: 0.75rem;
+  color: var(--cor-texto-fraco);
+  margin-bottom: 0.2rem;
+}
+
+.credenciais-demo {
+  font-size: 0.8rem;
+  color: var(--cor-texto-fraco);
+  margin-top: 1.5rem;
+}
+
+.credenciais-demo code {
+  background: var(--cor-borda);
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+}

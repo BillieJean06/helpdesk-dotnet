@@ -66,20 +66,20 @@ O `tenant_id` e o papel vêm como claims no próprio JWT; o filtro global do EF 
 
 ### Decisões de modelagem
 
-| Decisão                                                      | Motivo                                                                                  |
-| ------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| `Comentario` é **entidade filha** do `Ticket`                | Tem autor, data e ordem; não é intercambiável como um Value Object                      |
-| SLA é uma **`PoliticaSla`** separada de `Prioridade`         | Prioridade classifica; o prazo é regra e pode variar por cliente ou plano               |
-| Domínio recebe **`agora`** por parâmetro                     | O `TimeProvider` fica na Application; nos testes, `FakeTimeProvider` controla o relógio |
-| Solicitante e atendente entram só como **`Guid`**            | Identidade é outro contexto; o domínio não navega para `User`                           |
-| **`TenantId`** no ticket desde o início                      | Adicionar multi-tenancy depois, com dados no banco, custa muito mais                    |
-| **Filtro global por tenant** no EF + checagem no `Adicionar` | Leituras nunca cruzam empresas; gravações de outro tenant são recusadas                 |
-| **`ITicketRepository` no Domain**, EF na Infrastructure      | O domínio declara o que precisa; quem persiste é detalhe de infraestrutura              |
-| **Concorrência otimista** (`xmin` do Postgres)               | Dois atendentes não assumem o mesmo ticket: o segundo recebe conflito                   |
-| **Enums gravados como texto**                                | Legível no banco e imune a reordenação do enum                                          |
-| **`UserValidator` do Identity trocado** por um tenant-aware   | O padrão checa unicidade de e-mail/username na tabela inteira; aqui é por tenant          |
-| **Limites de tamanho no domínio**                            | Estourar o limite vira `DomainException`, não erro de banco                             |
-| **ASP.NET Identity só com `AddIdentityCore`**, sem cookies    | A Api emite JWT; não precisa do esquema de sign-in completo do `AddIdentity`             |
+| Decisão                                                       | Motivo                                                                                            |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `Comentario` é **entidade filha** do `Ticket`                 | Tem autor, data e ordem; não é intercambiável como um Value Object                                |
+| SLA é uma **`PoliticaSla`** separada de `Prioridade`          | Prioridade classifica; o prazo é regra e pode variar por cliente ou plano                         |
+| Domínio recebe **`agora`** por parâmetro                      | O `TimeProvider` fica na Application; nos testes, `FakeTimeProvider` controla o relógio           |
+| Solicitante e atendente entram só como **`Guid`**             | Identidade é outro contexto; o domínio não navega para `User`                                     |
+| **`TenantId`** no ticket desde o início                       | Adicionar multi-tenancy depois, com dados no banco, custa muito mais                              |
+| **Filtro global por tenant** no EF + checagem no `Adicionar`  | Leituras nunca cruzam empresas; gravações de outro tenant são recusadas                           |
+| **`ITicketRepository` no Domain**, EF na Infrastructure       | O domínio declara o que precisa; quem persiste é detalhe de infraestrutura                        |
+| **Concorrência otimista** (`xmin` do Postgres)                | Dois atendentes não assumem o mesmo ticket: o segundo recebe conflito                             |
+| **Enums gravados como texto**                                 | Legível no banco e imune a reordenação do enum                                                    |
+| **`UserValidator` do Identity trocado** por um tenant-aware   | O padrão checa unicidade de e-mail/username na tabela inteira; aqui é por tenant                  |
+| **Limites de tamanho no domínio**                             | Estourar o limite vira `DomainException`, não erro de banco                                       |
+| **ASP.NET Identity só com `AddIdentityCore`**, sem cookies    | A Api emite JWT; não precisa do esquema de sign-in completo do `AddIdentity`                      |
 | **Papel (role) é conceito da Application/Api**, não do Domain | O agregado protege consistência (“só o responsável resolve”); quem pode fazer o quê é autorização |
 
 ## Arquitetura
@@ -129,10 +129,10 @@ dotnet run --project src/Helpdesk.Api
 
 Em ambiente de Development, a API cria sozinha os três papéis e um usuário de exemplo por papel (login abaixo), se ainda não existirem. Credenciais públicas de propósito, só para rodar o projeto localmente — nunca use esse padrão em produção. `tenantId`: `11111111-1111-1111-1111-111111111111`.
 
-| Papel | E-mail | Senha |
-| --- | --- | --- |
-| Cliente | `cliente@helpdesk.local` | `Demo123$` |
-| Atendente | `atendente@helpdesk.local` | `Demo123$` |
+| Papel      | E-mail                      | Senha      |
+| ---------- | --------------------------- | ---------- |
+| Cliente    | `cliente@helpdesk.local`    | `Demo123$` |
+| Atendente  | `atendente@helpdesk.local`  | `Demo123$` |
 | Supervisor | `supervisor@helpdesk.local` | `Demo123$` |
 
 **Testes:**
@@ -146,6 +146,27 @@ Os testes de integração criam um banco descartável por execução e o removem
 
 **Segredos nunca entram no repositório.** As credenciais em `docker-compose.yml` e `.env.example` são fixas de propósito, só valem para o container local e não protegem nada sensível; em qualquer ambiente real (staging, produção), a connection string vem de user-secrets, variável de ambiente ou de um cofre de segredos, nunca de um arquivo versionado.
 
+### Front-end
+
+Vite + React + TypeScript, TanStack Query para chamadas à API e React Router para as rotas. Login, fila de tickets (cliente vê os próprios, atendente/supervisor veem a fila do tenant), abrir ticket, assumir e comentar.
+
+```bash
+cd frontend
+npm install
+cp .env.example .env
+npm run dev   # http://localhost:5173, com a API já rodando em http://localhost:5099
+```
+
+**Tipos gerados do OpenAPI**, não escritos à mão — zero divergência entre os DTOs do C# e o TypeScript:
+
+```bash
+npm run generate:types   # precisa da API rodando; escreve src/api/schema.d.ts
+```
+
+Depois de mudar qualquer DTO ou endpoint no back-end, rode esse comando de novo e o `tsc` acusa, no front, todo lugar que quebrou.
+
+Decisões: token JWT em `localStorage` (simples para um projeto de estudo; um app real preferiria cookie `HttpOnly`, decisão documentada em `src/auth/token.ts`); papel do usuário lido decodificando o JWT no cliente, só para ajustar a UI — quem garante que o token é legítimo é sempre a Api.
+
 ## Roadmap
 
 - [x] Estrutura da solution
@@ -153,7 +174,7 @@ Os testes de integração criam um banco descartável por execução e o removem
 - [x] Cálculo de SLA (primeira resposta e resolução) com pausa em `AguardandoCliente`
 - [x] Persistência com EF Core (PostgreSQL, migrations, testes de integração)
 - [x] API com autenticação (ASP.NET Identity + JWT) e policies por papel (cliente, atendente, supervisor)
-- [ ] Front-end React + TypeScript (Vite, TanStack Query)
+- [x] Front-end React + TypeScript (Vite, TanStack Query, tipos gerados do OpenAPI)
 - [ ] Domain Events (`TicketResolvido`, `TicketReaberto`)
 - [ ] Outbox Pattern
 - [ ] Tempo real com SignalR
