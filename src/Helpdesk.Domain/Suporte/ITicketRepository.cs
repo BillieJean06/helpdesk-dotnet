@@ -9,6 +9,13 @@ public interface ITicketRepository
     /// <summary>Carrega o agregado completo (com comentários) do tenant atual, ou null.</summary>
     Task<Ticket?> ObterPorIdAsync(Guid id, CancellationToken ct = default);
 
+    /// <summary>
+    /// Lista tickets do tenant atual, mais recentes primeiro (sem comentários: é uma visão
+    /// de fila/lista, não o detalhe). <paramref name="apenasDoSolicitante"/> restringe a um
+    /// único solicitante; null lista todos do tenant.
+    /// </summary>
+    Task<IReadOnlyList<Ticket>> ListarAsync(Guid? apenasDoSolicitante, CancellationToken ct = default);
+
     /// <summary>Marca o ticket para inclusão; só persiste em <see cref="SalvarAsync"/>.</summary>
     void Adicionar(Ticket ticket);
 

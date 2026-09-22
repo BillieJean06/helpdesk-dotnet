@@ -26,6 +26,8 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<AbrirTicketUseCase>();
 builder.Services.AddScoped<AssumirTicketUseCase>();
 builder.Services.AddScoped<ObterTicketUseCase>();
+builder.Services.AddScoped<ListarTicketsUseCase>();
+builder.Services.AddScoped<ComentarTicketUseCase>();
 
 // Jwt:Key é secreto (assinatura do token) e vem de user-secrets/variável de ambiente;
 // Issuer e Audience não são segredo e ficam em appsettings.json.
@@ -60,6 +62,13 @@ builder.Services
     });
 builder.Services.AddAuthorization();
 
+// Origens do front-end (não é segredo, mas fica configurável fora do código para variar por
+// ambiente). Sem "AllowAnyOrigin": a lista é explícita mesmo em dev.
+const string CorsPolicyFrontend = "Frontend";
+var origensPermitidas = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+builder.Services.AddCors(options => options.AddPolicy(CorsPolicyFrontend, policy =>
+    policy.WithOrigins(origensPermitidas).AllowAnyHeader().AllowAnyMethod()));
+
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddProblemDetails();
 
@@ -92,6 +101,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors(CorsPolicyFrontend);
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -11,6 +11,15 @@ internal sealed class TicketRepository(HelpdeskDbContext db, ITenantContext tena
             .Include(t => t.Comentarios.OrderBy(c => c.CriadoEm))
             .FirstOrDefaultAsync(t => t.Id == id, ct);
 
+    public async Task<IReadOnlyList<Ticket>> ListarAsync(Guid? apenasDoSolicitante, CancellationToken ct = default)
+    {
+        var query = db.Tickets.AsQueryable();
+        if (apenasDoSolicitante is { } solicitanteId)
+            query = query.Where(t => t.SolicitanteId == solicitanteId);
+
+        return await query.OrderByDescending(t => t.CriadoEm).ToListAsync(ct);
+    }
+
     public void Adicionar(Ticket ticket)
     {
         ArgumentNullException.ThrowIfNull(ticket);

@@ -52,10 +52,12 @@ Três papéis, com JWT emitido pela própria API (ASP.NET Identity para usuário
 - **Supervisor:** mesma visão do atendente (reatribuição e métricas ficam para depois).
 
 ```
-POST /api/auth/login          { "tenantId": "...", "email": "...", "senha": "..." }  -> { "token": "...", "expiraEm": "..." }
-POST /api/tickets              [Cliente]     abre um ticket
-POST /api/tickets/{id}/assumir [Atendente]   assume da fila
-GET  /api/tickets/{id}         [autenticado] cliente só vê o próprio; atendente/supervisor veem qualquer um do tenant
+POST /api/auth/login              { "tenantId": "...", "email": "...", "senha": "..." }  -> { "token": "...", "expiraEm": "..." }
+GET  /api/tickets                  [autenticado] cliente vê só os próprios; atendente/supervisor veem a fila do tenant
+POST /api/tickets                  [Cliente]     abre um ticket
+GET  /api/tickets/{id}             [autenticado] cliente só o próprio; atendente/supervisor qualquer um do tenant
+POST /api/tickets/{id}/assumir     [Atendente]   assume da fila
+POST /api/tickets/{id}/comentarios [autenticado] mesma regra de acesso do GET por id
 ```
 
 O `tenant_id` e o papel vêm como claims no próprio JWT; o filtro global do EF cuida do isolamento entre empresas a partir daí.

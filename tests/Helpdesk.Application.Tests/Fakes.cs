@@ -13,6 +13,15 @@ internal sealed class FakeTicketRepository : ITicketRepository
     public Task<Ticket?> ObterPorIdAsync(Guid id, CancellationToken ct = default) =>
         Task.FromResult(_tickets.GetValueOrDefault(id));
 
+    public Task<IReadOnlyList<Ticket>> ListarAsync(Guid? apenasDoSolicitante, CancellationToken ct = default)
+    {
+        IEnumerable<Ticket> query = _tickets.Values.OrderByDescending(t => t.CriadoEm);
+        if (apenasDoSolicitante is { } solicitanteId)
+            query = query.Where(t => t.SolicitanteId == solicitanteId);
+
+        return Task.FromResult<IReadOnlyList<Ticket>>(query.ToList());
+    }
+
     public void Adicionar(Ticket ticket) => _tickets[ticket.Id] = ticket;
 
     public Task SalvarAsync(CancellationToken ct = default)

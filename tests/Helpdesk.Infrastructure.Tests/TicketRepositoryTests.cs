@@ -127,6 +127,47 @@ public class TicketRepositoryTests(PostgresFixture pg) : IClassFixture<PostgresF
     }
 
     [FactPostgres]
+    public async Task Listar_sem_filtro_traz_todos_os_tickets_do_tenant_mais_recentes_primeiro()
+    {
+        var primeiro = NovoTicket();
+        await Persistir(primeiro);
+        var maisRecente = Ticket.Abrir(_tenant, _cliente, "Outro chamado", "Descrição", Prioridade.Baixa, T0.AddMinutes(1));
+        await Persistir(maisRecente);
+
+        using var sessao = pg.AbrirSessao(_tenant);
+        var tickets = await sessao.Repo.ListarAsync(apenasDoSolicitante: null);
+
+        Assert.Equal([maisRecente.Id, primeiro.Id], tickets.Select(t => t.Id));
+    }
+
+    [FactPostgres]
+    public async Task Listar_com_filtro_traz_so_os_tickets_do_solicitante()
+    {
+        var outroCliente = Guid.NewGuid();
+        var ticketDoCliente = NovoTicket();
+        await Persistir(ticketDoCliente);
+        var ticketDeOutroCliente = Ticket.Abrir(_tenant, outroCliente, "t", "d", Prioridade.Baixa, T0);
+        await Persistir(ticketDeOutroCliente);
+
+        using var sessao = pg.AbrirSessao(_tenant);
+        var tickets = await sessao.Repo.ListarAsync(_cliente);
+
+        var ticket = Assert.Single(tickets);
+        Assert.Equal(ticketDoCliente.Id, ticket.Id);
+    }
+
+    [FactPostgres]
+    public async Task Listar_nao_traz_tickets_de_outro_tenant()
+    {
+        await Persistir(NovoTicket());
+
+        using var deOutraEmpresa = pg.AbrirSessao(Guid.NewGuid());
+        var tickets = await deOutraEmpresa.Repo.ListarAsync(apenasDoSolicitante: null);
+
+        Assert.Empty(tickets);
+    }
+
+    [FactPostgres]
     public async Task Enums_sao_gravados_como_texto()
     {
         var id = await Persistir(NovoTicket());
